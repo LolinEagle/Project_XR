@@ -3,33 +3,46 @@ using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit;
 
 public class MenuManager : MonoBehaviour{
-	[SerializeField] GameObject		menuB;
+	[Header("Menu A")]
 	[SerializeField] Transform		buttonParent;
 	[SerializeField] GameObject		buttonPrefab;
+
+	[Header("Menu B")]
+	[SerializeField] GameObject		menuB;
+	[SerializeField] AudioSource	audioSource;
 	[SerializeField] string[]		activityNames;
 	[SerializeField] AudioClip[]	activitySounds;
 
-	private bool	debug = true;
+	[Header("Debug mode (use for regular unity play mode)")]
+	[SerializeField] private bool	debug = false;
 
 	void Start(){
-		GenerateButtons();
-	}
-
-	void GenerateButtons(){
-		foreach (string activity in activityNames){
-			GameObject	btn = Instantiate(buttonPrefab, buttonParent);
-
-			btn.GetComponentInChildren<Text>().text = activity;
-			if (debug){
-				Button	btnComponent = btn.GetComponent<Button>();
-				btnComponent.onClick.AddListener(() => OpenMenuB(activity));
-			}
-			// btn.GetComponent<XRSimpleInteractable>().selectEntered.AddListener((args) => OpenMenuB(activity));
+		if (activityNames.Length != activitySounds.Length) {
+			Debug.Log("Error : activityNames and activitySounds have not the same length.");
+		} else {
+			GenerateButtons();
 		}
 	}
 
-	void OpenMenuB(string selectedActivity){
+	void GenerateButtons(){
+		for (int i = 0; i < activityNames.Length; i++){
+			GameObject	btn = Instantiate(buttonPrefab, buttonParent);
+			int			currentIndex = i;
+
+			btn.GetComponentInChildren<Text>().text = activityNames[currentIndex];
+			if (debug){
+				Button	btnComponent = btn.GetComponent<Button>();
+				btnComponent.onClick.AddListener(() => OpenMenuB(activityNames[currentIndex], activitySounds[currentIndex]));
+			} else {
+				btn.GetComponent<XRSimpleInteractable>().selectEntered.AddListener((args) => OpenMenuB(activityNames[currentIndex], activitySounds[currentIndex]));
+			}
+		}
+	}
+
+	void OpenMenuB(string selectedActivity, AudioClip selectedSounds){
 		menuB.SetActive(true);
-		menuB.GetComponentInChildren<Button>().GetComponentInChildren<Text>().text = selectedActivity;
+		menuB.GetComponentInChildren<Text>().text = selectedActivity;
+		menuB.GetComponentInChildren<Button>().onClick.AddListener(() => audioSource.Play());
+		audioSource.clip = selectedSounds;
 	}
 }
